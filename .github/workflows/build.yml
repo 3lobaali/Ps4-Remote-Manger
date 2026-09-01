@@ -1,97 +1,29 @@
-name: Build PS4 PKG
+name: Build PS4 Homebrew PKG
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "main", "master" ]
-  workflow_dispatch:
+    branches: [ "main" ]
 
 jobs:
-  build:
+  build-pkg:
     runs-on: ubuntu-latest
 
+    container:
+      image: openorbis/toolchain:latest
+
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install Dependencies
+      - name: Compile C Code & Build PKG
         run: |
-          sudo apt-get update
-          sudo apt-get install -y clang lld make wget
-
-      - name: Setup OpenOrbis PS4 Toolchain
-        run: |
-          wget https://github.com/OpenOrbis/OpenOrbis-PS4-Toolchain/releases/download/v0.5/Toolchain.tar.gz
-          mkdir -p $HOME/OO_PS4_TOOLCHAIN
-          tar -xzf Toolchain.tar.gz -C $HOME/OO_PS4_TOOLCHAIN
-          chmod -R +x $HOME/OO_PS4_TOOLCHAIN/bin
-          echo "OO_PS4_TOOLCHAIN=$HOME/OO_PS4_TOOLCHAIN" >> $GITHUB_ENV
-          echo "$HOME/OO_PS4_TOOLCHAIN/bin" >> $GITHUB_PATH
-
-      - name: Locate Directory and Build PKG
-        run: |
-          TARGET_DIR=$(find . -maxdepth 2 -type d -iname "*PS4*" | head -n 1)
-          if [ -z "$TARGET_DIR" ]; then
-            TARGET_DIR="."
-          fi
-          echo "Building in directory: $TARGET_DIR"
-          cd "$TARGET_DIR"
-          
-          if [ ! -f "icon0.png" ]; then
-            wget -O icon0.png https://raw.githubusercontent.com/OpenOrbis/OpenOrbis-PS4-Toolchain/master/samples/hello_world/icon0.png || touch icon0.png
-          fi
-          
+          cd PS4_RECEIVER_APP
           make
 
       - name: Upload PKG Artifact
         uses: actions/upload-artifact@v4
         with:
           name: PS4-Remote-Receiver-PKG
-          path: "**/*.pkg"
-          fi
-          echo "Building in directory: $TARGET_DIR"
-          cd "$TARGET_DIR"
-          
-          if [ ! -f "icon0.png" ]; then
-            wget -O icon0.png https://raw.githubusercontent.com/OpenOrbis/OpenOrbis-PS4-Toolchain/master/samples/hello_world/icon0.png || touch icon0.png
-          fi
-          
-          make
-
-      - name: Upload PKG Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: PS4-Remote-Receiver-PKG
-          path: "**/*.pkg"
-          fi
-          echo "Building in directory: $TARGET_DIR"
-          cd "$TARGET_DIR"
-          
-          if [ ! -f "icon0.png" ]; then
-            wget -O icon0.png https://raw.githubusercontent.com/OpenOrbis/OpenOrbis-PS4-Toolchain/master/samples/hello_world/icon0.png || touch icon0.png
-          fi
-          
-          make
-
-      - name: Upload PKG Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: PS4-Remote-Receiver-PKG
-          path: "**/*.pkg"
-          echo "Building in directory: $TARGET_DIR"
-          cd "$TARGET_DIR"
-          
-          # تنزيل أيقونة مؤقتة تلقائياً في حال عدم وجود icon0.png
-          if [ ! -f "icon0.png" ]; then
-            wget -O icon0.png https://raw.githubusercontent.com/OpenOrbis/OpenOrbis-PS4-Toolchain/master/samples/hello_world/icon0.png || touch icon0.png
-          fi
-          
-          make
-
-      - name: Upload PKG Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: PS4-Remote-Receiver-PKG
-          path: |
-            **/*.pkg
+          path: PS4_RECEIVER_APP/*.pkg
