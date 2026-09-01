@@ -12,17 +12,20 @@ LDFLAGS     := -lkernel -lSceNet
 SRCS        := main.c
 OBJS        := $(SRCS:.c=.o)
 TARGET      := $(TITLE_ID).elf
+PKG_OUTPUT  := $(TITLE_ID).pkg
 
 all: $(TARGET) pkg
 
 $(TARGET): $(OBJS)
-	$(CC) $(OBJS) $(LDFLAGS) -o $@
+\t$(CC) $(OBJS) $(LDFLAGS) -o $@
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+\t$(CC) $(CFLAGS) -c $< -o $@
 
-pkg:
-	create-pkg --titleid $(TITLE_ID) --title "$(APP_TITLE)" --icon $(ICON) $(TARGET) app.pkg
+pkg: $(TARGET)
+\t@echo "=== Building PKG ==="
+\t@ls -la $(ICON) || (echo "ERROR: $(ICON) not found!" && exit 1)
+\tcreate-pkg --titleid $(TITLE_ID) --title "$(APP_TITLE)" --icon $(ICON) $(TARGET) $(PKG_OUTPUT)
 
 clean:
-	rm -f $(OBJS) $(TARGET) app.pkg
+\trm -f $(OBJS) $(TARGET) $(PKG_OUTPUT)
