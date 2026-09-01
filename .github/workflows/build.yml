@@ -3,38 +3,40 @@ name: Build PS4 Homebrew PKG
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   build-pkg:
     runs-on: ubuntu-latest
 
-    container:
-      image: openorbis/toolchain:latest
-
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Debug files
+      - name: Install OpenOrbis dependencies
         run: |
-          echo "=== ROOT ==="
-          ls -la
-          echo "=== PS4_RECEIVER_APP ==="
-          ls -la PS4_RECEIVER_APP || echo "DIR NOT FOUND"
+          sudo apt-get update
+          sudo apt-get install -y clang llvm
 
-      - name: Compile C Code & Build PKG
+      - name: Clone and build toolchain
         run: |
-          cd PS4_RECEIVER_APP
-          echo "=== ICON CHECK ==="
-          ls -la icon0.png || (echo "ERROR: icon0.png not found!" && exit 1)
-          echo "=== MAKEFILE ==="
-          cat Makefile
-          echo "=== BUILD ==="
+          git clone https://github.com/OpenOrbis/OpenOrbis-PS4-Toolchain.git /tmp/oo-toolchain
+          cd /tmp/oo-toolchain
           make
 
-      - name: Debug PKG output
+      - name: Set environment
+        run: |
+          echo "OO_PS4_TOOLCHAIN=/tmp/oo-toolchain" >> $GITHUB_ENV
+          echo "/tmp/oo-toolchain/bin" >> $GITHUB_PATH
+
+      - name: Build PS4 App
+        run: |
+          cd PS4_RECEIVER_APP
+          make
+
+      - name: Upload PKG
+        uses: actions/upload-artifact@v4
+        with:
+          name: PS4-Remote-Receiver-PKG
+          path: PS4_RECEIVER_APP/*.pkg      - name: Debug PKG output
         run: |
           echo "=== PKG FILES ==="
           find . -name "*.pkg" -o -name "*.PKG" || echo "NO PKG FOUND"
