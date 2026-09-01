@@ -28,22 +28,13 @@ jobs:
         run: |
           cd PS4_RECEIVER_APP
           echo "=== ICON CHECK ==="
-          ls -la icon0.png || echo "MISSING ICON"
+          ls -la icon0.png || (echo "ERROR: icon0.png not found!" && exit 1)
           echo "=== MAKEFILE ==="
           cat Makefile
           echo "=== BUILD ==="
           make
 
       - name: Debug PKG output
-        run: |
-          echo "=== PKG FILES ==="
-          find . -name "*.pkg" -o -name "*.PKG" || echo "NO PKG FOUND"
-
-      - name: Upload PKG Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: PS4-Remote-Receiver-PKG
-          path: PS4_RECEIVER_APP/*.pkg      - name: Debug PKG output
         run: |
           echo "=== PKG FILES ==="
           find . -name "*.pkg" -o -name "*.PKG" || echo "NO PKG FOUND"
