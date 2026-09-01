@@ -152,7 +152,7 @@ void *pkg_server_thread(void *arg) {
 int main() {
     printf("=========================================
 ");
-    printf("   PS4 REMOTE RECEIVER - ODAI ECOSYSTEM  
+    printf("   BISAN REMOTE RECEIVER - ALI ECOSYSTEM  
 ");
     printf("=========================================
 ");
