@@ -4,6 +4,7 @@ import threading
 import socket
 import json
 import urllib.request
+import urllib.parse
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 import os
 
@@ -44,7 +45,7 @@ class PkgServer(threading.Thread):
 def send_package_action():
     global local_server
     target_ip = ip_entry_pkg.get().strip()
-    target_port = port_entry_pkg.get().strip()
+    target_port = int(port_entry_pkg.get().strip())
     pkg_filepath = pkg_entry.get().strip()
 
     if not pkg_filepath:
@@ -65,10 +66,10 @@ def send_package_action():
         os.chdir(pkg_dir)
 
     download_url = f"http://{pc_ip}:{server_port}/{safe_filename}"
-    data = {"type": "direct", "packages": [download_url]}
+    data = {"pkg_url": download_url}
     json_data = json.dumps(data).encode('utf-8')
 
-    ps4_url = f"http://{target_ip}:{target_port}/api/install"
+    ps4_url = f"http://{target_ip}:{target_port}/"
 
     try:
         req = urllib.request.Request(ps4_url, data=json_data, headers={'Content-Type': 'application/json'})
@@ -81,7 +82,8 @@ def send_package_action():
             messagebox.showerror("خطأ", f"رد البلايستيشن: {result}")
 
     except Exception as e:
-        messagebox.showerror("فشل الاتصال", f"تأكد أن تطبيق Remote Package Installer مفتوح في الـ PS4.\nالتفاصيل: {e}")
+        messagebox.showerror("فشل الاتصال", f"تأكد أن تطبيق PS4 Remote Receiver شغال على الـ PS4.
+التفاصيل: {e}")
 
 # ==========================================
 # 3. دوال الخلفية (Backend) لإرسال البايلود .bin
@@ -103,11 +105,13 @@ def send_payload_action():
         sock.settimeout(5)
         sock.connect((target_ip, target_port))
         sock.sendall(payload_data)
+        sock.shutdown(socket.SHUT_WR)
         sock.close()
 
         messagebox.showinfo("نجاح", "تم إرسال وحقن البايلود بنجاح!")
     except Exception as e:
-        messagebox.showerror("فشل الاتصال", f"تم رفض الاتصال. تأكد من تفعيل Bin Loader في إعدادات GoldHEN.\nالتفاصيل: {e}")
+        messagebox.showerror("فشل الاتصال", f"تم رفض الاتصال. تأكد من أن PS4 Remote Receiver شغال.
+التفاصيل: {e}")
 
 # ==========================================
 # 4. دوال التصفح (Browse)
@@ -183,7 +187,7 @@ ip_entry_payload.grid(row=1, column=0, padx=(0, 20))
 
 tk.Label(ip_frame_payload, text="Port").grid(row=0, column=1, sticky="w")
 port_entry_payload = tk.Entry(ip_frame_payload, width=15)
-port_entry_payload.insert(0, "9090") # المنفذ الافتراضي للبايلود في GoldHEN
+port_entry_payload.insert(0, "9090")
 port_entry_payload.grid(row=1, column=1)
 
 payload_frame = tk.Frame(tab_payload)
