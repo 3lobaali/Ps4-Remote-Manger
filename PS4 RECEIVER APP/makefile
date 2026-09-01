@@ -1,6 +1,6 @@
 # إعدادات OpenOrbis SDK لبناء PKG البلايستيشن
 TITLE_ID    := ODAI00001
-APP_TITLE   := PS4 Remote Receiver
+APP_TITLE   := Bisan Remote Receiver
 BOOSTER     := 1
 ICON        := icon0.png
 
