@@ -27,13 +27,26 @@ jobs:
           echo "OO_PS4_TOOLCHAIN=$HOME/OO_PS4_TOOLCHAIN" >> $GITHUB_ENV
           echo "$HOME/OO_PS4_TOOLCHAIN/bin" >> $GITHUB_PATH
 
-      - name: Compile C Code & Build PKG
+      - name: Locate Directory and Build PKG
         run: |
-          cd PS4_RECEIVER_APP
+          # البحث تلقائياً عن أي مجلد يحتوي على كلمة PS4 لتفادي أخطاء الأسماء
+          TARGET_DIR=$(find . -maxdepth 2 -type d -iname "*PS4*" | head -n 1)
+          if [ -z "$TARGET_DIR" ]; then
+            TARGET_DIR="."
+          fi
+          echo "Building in directory: $TARGET_DIR"
+          cd "$TARGET_DIR"
+          
+          # تنزيل أيقونة مؤقتة تلقائياً في حال عدم وجود icon0.png
+          if [ ! -f "icon0.png" ]; then
+            wget -O icon0.png https://raw.githubusercontent.com/OpenOrbis/OpenOrbis-PS4-Toolchain/master/samples/hello_world/icon0.png || touch icon0.png
+          fi
+          
           make
 
       - name: Upload PKG Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Bisan-Remote-Receiver-PKG
-          path: PS4_RECEIVER_APP/*.pkg
+          name: PS4-Remote-Receiver-PKG
+          path: |
+            **/*.pkg
