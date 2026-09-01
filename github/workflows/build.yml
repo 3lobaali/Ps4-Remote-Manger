@@ -1,0 +1,32 @@
+name: Build PS4 Homebrew PKG
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-pkg:
+    runs-on: ubuntu-latest
+
+    # استخدام بيئة OpenOrbis جاهزة للبناء عبر Docker
+    container:
+      image: openorbis/toolchain:latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Compile C Code & Build PKG
+        run: |
+          cd PS4_App
+          make
+
+      - name: Upload PKG Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PS4-Remote-Receiver-PKG
+          path: PS4_App/*.pkg
+
+
