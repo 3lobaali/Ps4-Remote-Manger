@@ -17,10 +17,8 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Debug environment
+      - name: Debug files
         run: |
-          echo "=== PWD ==="
-          pwd
           echo "=== ROOT ==="
           ls -la
           echo "=== PS4_RECEIVER_APP ==="
@@ -29,12 +27,23 @@ jobs:
       - name: Compile C Code & Build PKG
         run: |
           cd PS4_RECEIVER_APP
+          echo "=== ICON CHECK ==="
+          ls -la icon0.png || echo "MISSING ICON"
           echo "=== MAKEFILE ==="
-          cat Makefile || echo "NO MAKEFILE"
+          cat Makefile
           echo "=== BUILD ==="
           make
 
       - name: Debug PKG output
+        run: |
+          echo "=== PKG FILES ==="
+          find . -name "*.pkg" -o -name "*.PKG" || echo "NO PKG FOUND"
+
+      - name: Upload PKG Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PS4-Remote-Receiver-PKG
+          path: PS4_RECEIVER_APP/*.pkg      - name: Debug PKG output
         run: |
           echo "=== PKG FILES ==="
           find . -name "*.pkg" -o -name "*.PKG" || echo "NO PKG FOUND"
