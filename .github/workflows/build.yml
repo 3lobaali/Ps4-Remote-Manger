@@ -17,10 +17,27 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Debug environment
+        run: |
+          echo "=== PWD ==="
+          pwd
+          echo "=== ROOT ==="
+          ls -la
+          echo "=== PS4_RECEIVER_APP ==="
+          ls -la PS4_RECEIVER_APP || echo "DIR NOT FOUND"
+
       - name: Compile C Code & Build PKG
         run: |
           cd PS4_RECEIVER_APP
+          echo "=== MAKEFILE ==="
+          cat Makefile || echo "NO MAKEFILE"
+          echo "=== BUILD ==="
           make
+
+      - name: Debug PKG output
+        run: |
+          echo "=== PKG FILES ==="
+          find . -name "*.pkg" -o -name "*.PKG" || echo "NO PKG FOUND"
 
       - name: Upload PKG Artifact
         uses: actions/upload-artifact@v4
