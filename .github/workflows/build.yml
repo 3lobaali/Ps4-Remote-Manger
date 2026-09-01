@@ -42,5 +42,5 @@ jobs:
       - name: Upload PKG Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: PS4-Remote-Receiver-PKG
+          name: Bisan-Remote-Receiver-PKG
           path: PS4_RECEIVER_APP/*.pkg
