@@ -7,7 +7,7 @@ ICON        := icon0.png
 # المترجم والأدوات
 CC          := clang
 CFLAGS      := -O2 -Wall
-LDFLAGS     := -lkernel -lSceNet
+LDFLAGS     := -lkernel -lSceNet -lpthread
 
 SRCS        := main.c
 OBJS        := $(SRCS:.c=.o)
