@@ -1,31 +1,54 @@
-# إعدادات OpenOrbis SDK لبناء PKG البلايستيشن
-TITLE_ID    := ODAI00001
-APP_TITLE   := Bisan Remote Receiver
-BOOSTER     := 1
-ICON        := icon0.png
+name: Build Bisan Remote Receiver
 
-# المترجم والأدوات
-CC          := clang
-CFLAGS      := -O2 -Wall
-LDFLAGS     := -lkernel -lSceNet -lpthread
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
 
-SRCS        := main.c
-OBJS        := $(SRCS:.c=.o)
-TARGET      := $(TITLE_ID).elf
-PKG_OUTPUT  := $(TITLE_ID).pkg
+jobs:
+  build-pkg:
+    name: Build PS4 PKG
+    runs-on: ubuntu-latest
 
-all: $(TARGET) pkg
+    container:
+      image: openorbisofficial/toolchain:latest
 
-$(TARGET): $(OBJS)
-\t$(CC) $(OBJS) $(LDFLAGS) -o $@
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
 
-%.o: %.c
-\t$(CC) $(CFLAGS) -c $< -o $@
+      - name: Show toolchain information
+        run: |
+          echo "OO_PS4_TOOLCHAIN=$OO_PS4_TOOLCHAIN"
+          echo "PATH=$PATH"
+          clang --version || true
+          find "$OO_PS4_TOOLCHAIN" -maxdepth 3 -type f \
+            ( -name "create-pkg" -o -name "create-fself" ) \
+            -print || true
 
-pkg: $(TARGET)
-\t@echo "=== Building PKG ==="
-\t@ls -la $(ICON) || (echo "ERROR: $(ICON) not found!" && exit 1)
-\tcreate-pkg --titleid $(TITLE_ID) --title "$(APP_TITLE)" --icon $(ICON) $(TARGET) $(PKG_OUTPUT)
+      - name: Show project files
+        run: |
+          ls -la
+          ls -la PS4_RECEIVER_APP
+          test -f PS4_RECEIVER_APP/main.c
+          test -f PS4_RECEIVER_APP/Makefile
+          test -f PS4_RECEIVER_APP/icon0.png
 
-clean:
-\trm -f $(OBJS) $(TARGET) $(PKG_OUTPUT)
+      - name: Build PS4 application and PKG
+        working-directory: PS4_RECEIVER_APP
+        run: |
+          make clean
+          make
+
+      - name: Show generated PKG
+        run: |
+          find PS4_RECEIVER_APP -type f ( -iname "*.pkg" -o -iname "*.elf" ) -print
+
+      - name: Upload PKG artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Bisan-Remote-Receiver-PKG
+          path: PS4_RECEIVER_APP/*.pkg
+          if-no-files-found: error
