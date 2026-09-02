@@ -36,7 +36,8 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: PS4-Remote-Receiver-PKG
-          path: PS4_RECEIVER_APP/*.pkg      - name: Debug PKG output
+          path: PS4_RECEIVER_APP/*.pkg     
+      - name: Debug PKG output
         run: |
           echo "=== PKG FILES ==="
           find . -name "*.pkg" -o -name "*.PKG" || echo "NO PKG FOUND"
