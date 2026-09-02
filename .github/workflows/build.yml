@@ -1,49 +1,39 @@
-name: Build PS4 Homebrew PKG
+name: Build Bisan Remote Receiver
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
 
 jobs:
   build-pkg:
+    name: Build PS4 PKG
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v5
 
-      - name: Install OpenOrbis dependencies
+      - name: Build EBOOT with OpenOrbis
+        uses: OpenOrbis/toolchain-action@main
+        with:
+          version: v0.5.1
+          command: cd PS4_RECEIVER_APP && make clean && make
+
+      - name: List build output
         run: |
-          sudo apt-get update
-          sudo apt-get install -y clang llvm
+          find PS4_RECEIVER_APP -maxdepth 3 -type f \
+            ( -name "*.elf" -o -name "eboot.bin" -o -name "*.pkg" ) \
+            -print
 
-      - name: Clone and build toolchain
-        run: |
-          git clone https://github.com/OpenOrbis/OpenOrbis-PS4-Toolchain.git /tmp/oo-toolchain
-          cd /tmp/oo-toolchain
-          make
-
-      - name: Set environment
-        run: |
-          echo "OO_PS4_TOOLCHAIN=/tmp/oo-toolchain" >> $GITHUB_ENV
-          echo "/tmp/oo-toolchain/bin" >> $GITHUB_PATH
-
-      - name: Build PS4 App
-        run: |
-          cd PS4_RECEIVER_APP
-          make
-
-      - name: Upload PKG
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: PS4-Remote-Receiver-PKG
-          path: PS4_RECEIVER_APP/*.pkg     
-      - name: Debug PKG output
-        run: |
-          echo "=== PKG FILES ==="
-          find . -name "*.pkg" -o -name "*.PKG" || echo "NO PKG FOUND"
-
-      - name: Upload PKG Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: PS4-Remote-Receiver-PKG
-          path: PS4_RECEIVER_APP/*.pkg
+          name: Bisan-Remote-Receiver-Build
+          path: |
+            PS4_RECEIVER_APP/eboot.bin
+            PS4_RECEIVER_APP/*.elf
+            PS4_RECEIVER_APP/*.pkg
+          if-no-files-found: error
