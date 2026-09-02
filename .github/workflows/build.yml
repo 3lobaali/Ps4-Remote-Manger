@@ -9,31 +9,59 @@ on:
 
 jobs:
   build-pkg:
-    name: Build PS4 PKG
+    name: Build PS4 Homebrew
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Build EBOOT with OpenOrbis
-        uses: OpenOrbis/toolchain-action@main
-        with:
-          version: v0.5.1
-          command: cd PS4_RECEIVER_APP && make clean && make
-
-      - name: List build output
+      - name: Pull OpenOrbis toolchain
         run: |
-          find PS4_RECEIVER_APP -maxdepth 3 -type f \
-            ( -name "*.elf" -o -name "eboot.bin" -o -name "*.pkg" ) \
+          docker pull openorbisofficial/toolchain:latest
+
+      - name: Verify project files
+        run: |
+          test -d PS4_RECEIVER_APP
+          test -f PS4_RECEIVER_APP/main.c
+          test -f PS4_RECEIVER_APP/Makefile
+          ls -la PS4_RECEIVER_APP
+
+      - name: Inspect OpenOrbis tools
+        run: |
+          docker run --rm \
+            openorbisofficial/toolchain:latest \
+            sh -lc '
+              echo "=== Environment ==="
+              env | sort | grep -E "OO_|PS4|PATH" || true
+              echo "=== Common build tools ==="
+              command -v clang || true
+              command -v create-eboot || true
+              command -v create-fself || true
+              command -v create-gp4 || true
+              command -v PkgTool.Core || true
+            '
+
+      - name: Build application
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/workspace" \
+            -w /workspace/PS4_RECEIVER_APP \
+            openorbisofficial/toolchain:latest \
+            sh -lc 'make clean && make'
+
+      - name: List build outputs
+        run: |
+          find PS4_RECEIVER_APP -maxdepth 4 -type f \
+            ( -iname "*.elf" -o -iname "*.bin" -o -iname "*.pkg" -o -iname "*.gp4" ) \
             -print
 
-      - name: Upload build artifact
+      - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: Bisan-Remote-Receiver-Build
           path: |
-            PS4_RECEIVER_APP/eboot.bin
             PS4_RECEIVER_APP/*.elf
+            PS4_RECEIVER_APP/*.bin
             PS4_RECEIVER_APP/*.pkg
           if-no-files-found: error
