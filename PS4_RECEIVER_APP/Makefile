@@ -1,54 +1,39 @@
-name: Build Bisan Remote Receiver
+# ==========================================================
+# Bisan Remote Receiver - OpenOrbis Build
+# ==========================================================
 
-on:
-  push:
-    branches: ["main"]
-  pull_request:
-    branches: ["main"]
-  workflow_dispatch:
+TITLE_ID := ODAI00001
+APP_TITLE := Bisan Remote Receiver
+APP_VERSION := 01.00
 
-jobs:
-  build-pkg:
-    name: Build PS4 PKG
-    runs-on: ubuntu-latest
+TARGET := eboot
+ELF := $(TARGET).elf
+EBOOT := eboot.bin
 
-    container:
-      image: openorbisofficial/toolchain:latest
+SRCS := main.c
+OBJS := $(SRCS:.c=.o)
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
+CC := clang
+CREATE_EBOOT := create-eboot
 
-      - name: Show toolchain information
-        run: |
-          echo "OO_PS4_TOOLCHAIN=$OO_PS4_TOOLCHAIN"
-          echo "PATH=$PATH"
-          clang --version || true
-          find "$OO_PS4_TOOLCHAIN" -maxdepth 3 -type f \
-            ( -name "create-pkg" -o -name "create-fself" ) \
-            -print || true
+PS4_TARGET := x86_64-scei-ps4
 
-      - name: Show project files
-        run: |
-          ls -la
-          ls -la PS4_RECEIVER_APP
-          test -f PS4_RECEIVER_APP/main.c
-          test -f PS4_RECEIVER_APP/Makefile
-          test -f PS4_RECEIVER_APP/icon0.png
+CFLAGS := -O2 -Wall -target $(PS4_TARGET)
 
-      - name: Build PS4 application and PKG
-        working-directory: PS4_RECEIVER_APP
-        run: |
-          make clean
-          make
+LDFLAGS := -target $(PS4_TARGET)
 
-      - name: Show generated PKG
-        run: |
-          find PS4_RECEIVER_APP -type f ( -iname "*.pkg" -o -iname "*.elf" ) -print
+LIBS := -lSceLibcInternal -lSceNet
 
-      - name: Upload PKG artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Bisan-Remote-Receiver-PKG
-          path: PS4_RECEIVER_APP/*.pkg
-          if-no-files-found: error
+all: $(EBOOT)
+
+$(ELF): $(OBJS)
+\t$(CC) $(OBJS) $(LDFLAGS) $(LIBS) -o $@
+
+%.o: %.c
+\t$(CC) $(CFLAGS) -c $< -o $@
+
+$(EBOOT): $(ELF)
+\t$(CREATE_EBOOT) $(ELF) $(EBOOT)
+
+clean:
+\trm -f $(OBJS) $(ELF) $(EBOOT) *.pkg
