@@ -16,31 +16,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
+      - name: Verify project files
+        run: |
+          echo "=== Project directory ==="
+          ls -la PS4_RECEIVER_APP
+          test -f PS4_RECEIVER_APP/main.c
+          test -f PS4_RECEIVER_APP/Makefile
+          test -f PS4_RECEIVER_APP/icon0.png
+
       - name: Pull OpenOrbis toolchain
         run: |
           docker pull openorbisofficial/toolchain:latest
-
-      - name: Verify project files
-        run: |
-          test -d PS4_RECEIVER_APP
-          test -f PS4_RECEIVER_APP/main.c
-          test -f PS4_RECEIVER_APP/Makefile
-          ls -la PS4_RECEIVER_APP
-
-      - name: Inspect OpenOrbis tools
-        run: |
-          docker run --rm \
-            openorbisofficial/toolchain:latest \
-            sh -lc '
-              echo "=== Environment ==="
-              env | sort | grep -E "OO_|PS4|PATH" || true
-              echo "=== Common build tools ==="
-              command -v clang || true
-              command -v create-eboot || true
-              command -v create-fself || true
-              command -v create-gp4 || true
-              command -v PkgTool.Core || true
-            '
 
       - name: Build application
         run: |
@@ -53,7 +39,7 @@ jobs:
       - name: List build outputs
         run: |
           find PS4_RECEIVER_APP -maxdepth 4 -type f \
-            ( -iname "*.elf" -o -iname "*.bin" -o -iname "*.pkg" -o -iname "*.gp4" ) \
+            ( -iname "*.elf" -o -iname "*.bin" -o -iname "*.pkg" ) \
             -print
 
       - name: Upload build artifacts
